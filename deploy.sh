@@ -1,8 +1,22 @@
 #! /bin/bash
 
+# Check if current branch is master
+if [ $(git name-rev --name-only HEAD) != "master" ]
+then
+    echo "You are not in master branch"
+
+    exit 0
+fi
+
 if [ -f "deploy_history.json" ]
 then
     JSON=$(cat deploy_history.json | jq ".")
+
+    LASTDEPLOYDATETIME=$(echo ${JSON} | jq ".deploys[0].dateTime")
+    # TODO: Manipular a data para Y-m-d H:M
+    # LASTDEPLOYDATETIME=$(date -d ${JSON} +"%Y%m%d%H%M")
+
+    echo "Last deploy ${LASTDEPLOYDATETIME}"
 
     STARTCOMMITHASH=$(echo ${JSON} | jq ".deploys[0].endCommitHash")
     ENDCOMMITHASH=$(echo $(git rev-parse HEAD))
@@ -10,7 +24,7 @@ then
     # Check if there are new commits
     if [ ${STARTCOMMITHASH} == '"'${ENDCOMMITHASH}'"' ]
     then
-        echo 'There are no changes. Not deployed.'
+        echo "There are no changes. Not deployed."
         
         exit 0
     fi
@@ -20,9 +34,14 @@ then
     NEWITEM=[{"dateTime":${DATETIME},"startCommitHash":${STARTCOMMITHASH},"endCommitHash":'"'${ENDCOMMITHASH}'"'}]
 
     echo $JSON | jq ".deploys |= ${NEWITEM} + ." > deploy_history.json
+
+    echo "Deployed"
 else
+    echo "Running first deploy"
+
     PROJECTNAME=$(basename `pwd`)
 
+    # User input for project name
     read -e -p "Project name: " -i ${PROJECTNAME} PROJECTNAME
 
     STARTCOMMITHASH=$(git rev-list --max-parents=0 HEAD)
@@ -32,4 +51,13 @@ else
     JSON={"projectName":'"'${PROJECTNAME}'"',"deploys":[{"dateTime":${DATETIME},"startCommitHash":'"'${STARTCOMMITHASH}'"',"endCommitHash":'"'${ENDCOMMITHASH}'"'}]}
 
     jq -n ${JSON} > deploy_history.json
+
+    echo "Deployed"
 fi
+
+# TODO: Commit deploy_history.json changes to master
+
+# TODO: Create zip package
+
+# Deploy to Google Drive
+# gdrive upload -r -p 19VquqHrFtBdqzlV3gDtgxFTppGRx6MhM commit1.txt
