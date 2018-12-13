@@ -55,9 +55,14 @@ else
     echo "Deployed"
 fi
 
-# TODO: Commit deploy_history.json changes to master
+# Commit deploy_history.json changes to master
+git add .
+git commit -m "Deploy - ${ENDCOMMITHASH}"
 
-# TODO: Create zip package
+# Create zip package
+ZIPFILENAME="${PROJECTNAME}-${DATETIME}.zip"
+git archive --output=${ZIPFILENAME} HEAD $(git diff --name-only --diff-filter=ACMRT ${STARTCOMMITHASH} HEAD)
 
-# Deploy to Google Drive
-# gdrive upload -r -p 19VquqHrFtBdqzlV3gDtgxFTppGRx6MhM commit1.txt
+# Deploy zip package to Google Drive
+GDRIVEFOLDERID="19VquqHrFtBdqzlV3gDtgxFTppGRx6MhM"
+gdrive upload -r -p ${GDRIVEFOLDERID} ${ZIPFILENAME}
