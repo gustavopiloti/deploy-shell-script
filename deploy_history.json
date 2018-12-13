@@ -1,0 +1,10 @@
+{
+  "projectName": "test",
+  "deploys": [
+    {
+      "dateTime": 201812131049,
+      "startCommitHash": "fe9d4596c8b4e5aca40c130ea4b28889e06b4119",
+      "endCommitHash": "fe9d4596c8b4e5aca40c130ea4b28889e06b4119"
+    }
+  ]
+}
