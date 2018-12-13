@@ -23,7 +23,7 @@ then
 else
     PROJECTNAME=$(basename `pwd`)
 
-    read -p "Project name: " -i ${PROJECTNAME} PROJECTNAME
+    read -e -p "Project name: " -i ${PROJECTNAME} PROJECTNAME
 
     STARTCOMMITHASH=$(git rev-list --max-parents=0 HEAD)
     ENDCOMMITHASH=$(git rev-parse HEAD)
