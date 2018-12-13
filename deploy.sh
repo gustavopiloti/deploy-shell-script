@@ -10,19 +10,23 @@ fi
 
 if [ -f "deploy_history.json" ]
 then
-    JSON=$(cat deploy_history.json | jq ".")
-
-    LASTDEPLOYDATETIME=$(echo ${JSON} | jq ".deploys[0].dateTime")
+    LASTDEPLOYDATETIME=$(cat deploy_history.json | jq ".deploys[0].dateTime")
     # TODO: Manipular a data para Y-m-d H:M
     # LASTDEPLOYDATETIME=$(date -d ${JSON} +"%Y%m%d%H%M")
 
     echo "Last deploy ${LASTDEPLOYDATETIME}"
 
-    STARTCOMMITHASH=$(echo ${JSON} | jq ".deploys[0].endCommitHash")
-    ENDCOMMITHASH=$(echo $(git rev-parse HEAD))
+    PROJECTNAME=$(cat deploy_history.json | jq ".projectName")
+    # Remove first and last quotes
+    PROJECTNAME=${PROJECTNAME:1:-1}
+
+    STARTCOMMITHASH=$(cat deploy_history.json | jq ".deploys[0].endCommitHash")
+    # Remove first and last quotes
+    STARTCOMMITHASH=${STARTCOMMITHASH:1:-1}
+    ENDCOMMITHASH=$(git rev-parse HEAD)
 
     # Check if there are new commits
-    if [ ${STARTCOMMITHASH} == '"'${ENDCOMMITHASH}'"' ]
+    if [ ${STARTCOMMITHASH} == ${ENDCOMMITHASH} ]
     then
         echo "There are no changes. Not deployed."
         
@@ -31,11 +35,9 @@ then
 
     DATETIME=$(date +"%Y%m%d%H%M")
 
-    NEWITEM=[{"dateTime":${DATETIME},"startCommitHash":${STARTCOMMITHASH},"endCommitHash":'"'${ENDCOMMITHASH}'"'}]
+    NEWITEM=[{"dateTime":${DATETIME},"startCommitHash":'"'${STARTCOMMITHASH}'"',"endCommitHash":'"'${ENDCOMMITHASH}'"'}]
 
     echo $JSON | jq ".deploys |= ${NEWITEM} + ." > deploy_history.json
-
-    echo "Deployed"
 else
     echo "Running first deploy"
 
@@ -51,8 +53,6 @@ else
     JSON={"projectName":'"'${PROJECTNAME}'"',"deploys":[{"dateTime":${DATETIME},"startCommitHash":'"'${STARTCOMMITHASH}'"',"endCommitHash":'"'${ENDCOMMITHASH}'"'}]}
 
     jq -n ${JSON} > deploy_history.json
-
-    echo "Deployed"
 fi
 
 # Commit deploy_history.json changes to master
@@ -66,3 +66,5 @@ git archive --output=${ZIPFILENAME} HEAD $(git diff --name-only --diff-filter=AC
 # Deploy zip package to Google Drive
 GDRIVEFOLDERID="19VquqHrFtBdqzlV3gDtgxFTppGRx6MhM"
 gdrive upload -r -p ${GDRIVEFOLDERID} ${ZIPFILENAME}
+
+echo "Deployed"
