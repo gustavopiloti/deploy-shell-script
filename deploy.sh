@@ -10,6 +10,7 @@ fi
 
 if [ -f "deploy_history.json" ]
 then
+    FIRSTDEPLOY=0
     LASTDEPLOYDATETIME=$(cat deploy_history.json | jq ".deploys[0].dateTime")
     # TODO: Manipular a data para Y-m-d H:M
     # LASTDEPLOYDATETIME=$(date -d ${JSON} +"%Y%m%d%H%M")
@@ -37,10 +38,11 @@ then
 
     NEWITEM=[{"dateTime":${DATETIME},"startCommitHash":'"'${STARTCOMMITHASH}'"',"endCommitHash":'"'${ENDCOMMITHASH}'"'}]
 
-    echo $JSON | jq ".deploys |= ${NEWITEM} + ." > deploy_history.json
+    echo $(cat deploy_history.json | jq ".deploys |= ${NEWITEM} + .") > deploy_history.json
 
     echo "deploy_history.json updated"
 else
+    FIRSTDEPLOY=1
     echo "Running first deploy"
 
     PROJECTNAME=$(basename `pwd`)
@@ -66,18 +68,28 @@ git archive --output=${ZIPFILENAME} HEAD $(git diff --name-only --diff-filter=AC
 echo "Zip created"
 
 # Check if zip file size > 0
-if [ wc -c < ${FILENAME} === 0]
+if [ $(wc -c < ${ZIPFILENAME}) == 0 ]
 then
     echo "Zip file with 0 bytes"
 
     # Delete local file
     rm -rf ${ZIPFILENAME}
     echo "File removed from local"
+
+    # Rollback deploy_history.json
+    if [ ${FIRSTDEPLOY} == 0 ]
+    then
+        # Remove new entry
+        echo cat deploy_history.json | jq "del(.deploys[0])" > deploy_history.json
+    else
+        # Remove file
+        rm -rf deploy_history.json
+    fi
+    echo "Rolled back deploy_history.json"
     
+    echo "Deploy failed"
     exit 0
 fi
-
-exit 0
 
 # Deploy zip package to Google Drive
 echo "Uploading file to Google Drive"
@@ -95,4 +107,4 @@ git commit -m "Deploy - ${ENDCOMMITHASH}"
 git push origin master
 echo "Pushed to GitHub"
 
-echo "Deployed"
+echo "Deploy successful"
