@@ -8,6 +8,8 @@ then
     exit 0
 fi
 
+DATETIME=$(date +"%Y%m%d%H%M")
+
 if [ -f "deploy_history.json" ]
 then
     FIRSTDEPLOY=0
@@ -34,14 +36,12 @@ then
     # Remove first and last quotes
     PROJECTNAME=${PROJECTNAME:1:-1}
 
-    DATETIME=$(date +"%Y%m%d%H%M")
+    # NEWITEM=[{"dateTime":${DATETIME},"startCommitHash":'"'${STARTCOMMITHASH}'"',"endCommitHash":'"'${ENDCOMMITHASH}'"'}]
 
-    NEWITEM=[{"dateTime":${DATETIME},"startCommitHash":'"'${STARTCOMMITHASH}'"',"endCommitHash":'"'${ENDCOMMITHASH}'"'}]
+    # JSON=$(cat deploy_history.json | jq ".")
+    # echo $JSON | jq ".deploys |= ${NEWITEM} + ." > deploy_history.json
 
-    JSON=$(cat deploy_history.json | jq ".")
-    echo $JSON | jq ".deploys |= ${NEWITEM} + ." > deploy_history.json
-
-    echo "deploy_history.json updated"
+    # echo "deploy_history.json updated"
 else
     FIRSTDEPLOY=1
     echo "Running first deploy"
@@ -52,60 +52,51 @@ else
     read -e -p "Insert the project name: " -i ${PROJECTNAME} PROJECTNAME
 
     STARTCOMMITHASH=$(git rev-list --max-parents=0 HEAD)
-    ENDCOMMITHASH=$(git rev-parse HEAD)
-    DATETIME=$(date +"%Y%m%d%H%M")
+    # ENDCOMMITHASH=$(git rev-parse HEAD)
 
-    JSON={"projectName":'"'${PROJECTNAME}'"',"deploys":[{"dateTime":${DATETIME},"startCommitHash":'"'${STARTCOMMITHASH}'"',"endCommitHash":'"'${ENDCOMMITHASH}'"'}]}
+    # JSON={"projectName":'"'${PROJECTNAME}'"',"deploys":[{"dateTime":${DATETIME},"startCommitHash":'"'${STARTCOMMITHASH}'"',"endCommitHash":'"'${ENDCOMMITHASH}'"'}]}
 
-    jq -n ${JSON} > deploy_history.json
+    # jq -n ${JSON} > deploy_history.json
 
-    echo "deploy_history.json created"
+    # echo "deploy_history.json created"
 fi
+
+# Create git arquive package
+echo "Creating package"
+FOLDERNAME="${PROJECTNAME}-${DATETIME}"
+git archive --output=${FOLDERNAME} HEAD $(git diff --name-only --diff-filter=ACMRT ${STARTCOMMITHASH} HEAD)
+echo "Package created"
+
+# Check if zip file size > 0
+if [ $(du -s -B1 ${FOLDERNAME} | cut -f1) == 0 ]
+then
+    echo "Package with 0 bytes"
+
+    # Delete local package
+    rm -rf ${FOLDERNAME}
+    echo "Package removed from local"
+    
+    echo "Deploy failed"
+    exit 0
+fi
+
+echo "Fim"
+exit 0
+
+# Deploy zip package to Google Drive
+echo "Uploading file to Google Drive"
+GDRIVEFOLDERID="19VquqHrFtBdqzlV3gDtgxFTppGRx6MhM"
+gdrive upload -r -p ${GDRIVEFOLDERID} ${FOLDERNAME}
+echo "File uploaded"
+
+# Delete local package
+rm -rf ${FOLDERNAME}
+echo "File removed from local"
 
 # Commit deploy_history.json changes to master
 git add .
 git commit -m "Deploy - ${ENDCOMMITHASH}"
 git push origin master
 echo "Pushed to GitHub"
-
-# Create zip package
-echo "Zipping files"
-ZIPFILENAME="${PROJECTNAME}-${DATETIME}.zip"
-git archive --output=${ZIPFILENAME} HEAD $(git diff --name-only --diff-filter=ACMRT ${STARTCOMMITHASH} HEAD)
-echo "Zip created"
-
-# Check if zip file size > 0
-if [ $(wc -c < ${ZIPFILENAME}) == 0 ]
-then
-    echo "Zip file with 0 bytes"
-
-    # Delete local file
-    rm -rf ${ZIPFILENAME}
-    echo "File removed from local"
-
-    # Rollback deploy_history.json
-    if [ ${FIRSTDEPLOY} == 0 ]
-    then
-        # Remove new entry
-        echo cat deploy_history.json | jq "del(.deploys[0])" > deploy_history.json
-    else
-        # Remove file
-        rm -rf deploy_history.json
-    fi
-    echo "Rolled back deploy_history.json"
-    
-    echo "Deploy failed"
-    exit 0
-fi
-
-# Deploy zip package to Google Drive
-echo "Uploading file to Google Drive"
-GDRIVEFOLDERID="19VquqHrFtBdqzlV3gDtgxFTppGRx6MhM"
-gdrive upload -r -p ${GDRIVEFOLDERID} ${ZIPFILENAME}
-echo "File uploaded"
-
-# Delete local file
-rm -rf ${ZIPFILENAME}
-echo "File removed from local"
 
 echo "Deploy successful"
