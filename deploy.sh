@@ -17,10 +17,6 @@ then
 
     echo "Last deploy ${LASTDEPLOYDATETIME}"
 
-    PROJECTNAME=$(cat deploy_history.json | jq ".projectName")
-    # Remove first and last quotes
-    PROJECTNAME=${PROJECTNAME:1:-1}
-
     STARTCOMMITHASH=$(cat deploy_history.json | jq ".deploys[0].endCommitHash")
     # Remove first and last quotes
     STARTCOMMITHASH=${STARTCOMMITHASH:1:-1}
@@ -33,6 +29,10 @@ then
         
         exit 0
     fi
+
+    PROJECTNAME=$(cat deploy_history.json | jq ".projectName")
+    # Remove first and last quotes
+    PROJECTNAME=${PROJECTNAME:1:-1}
 
     DATETIME=$(date +"%Y%m%d%H%M")
 
@@ -61,6 +61,12 @@ else
 
     echo "deploy_history.json created"
 fi
+
+# Commit deploy_history.json changes to master
+git add .
+git commit -m "Deploy - ${ENDCOMMITHASH}"
+git push origin master
+echo "Pushed to GitHub"
 
 # Create zip package
 echo "Zipping files"
@@ -101,11 +107,5 @@ echo "File uploaded"
 # Delete local file
 rm -rf ${ZIPFILENAME}
 echo "File removed from local"
-
-# Commit deploy_history.json changes to master
-git add .
-git commit -m "Deploy - ${ENDCOMMITHASH}"
-git push origin master
-echo "Pushed to GitHub"
 
 echo "Deploy successful"
