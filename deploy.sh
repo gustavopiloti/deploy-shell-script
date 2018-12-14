@@ -38,7 +38,8 @@ then
 
     NEWITEM=[{"dateTime":${DATETIME},"startCommitHash":'"'${STARTCOMMITHASH}'"',"endCommitHash":'"'${ENDCOMMITHASH}'"'}]
 
-    echo $(cat deploy_history.json | jq ".deploys |= ${NEWITEM} + .") > deploy_history.json
+    JSON=$(cat deploy_history.json | jq ".")
+    echo $JSON | jq ".deploys |= ${NEWITEM} + ." > deploy_history.json
 
     echo "deploy_history.json updated"
 else
