@@ -3,8 +3,8 @@
   "deploys": [
     {
       "dateTime": 201812141609,
-      "startCommitHash": "ca46a6cfc60b10b317d4a3f4b642535ffb2a5567",
-      "endCommitHash": "317bc91a39662d07dc7f51b1e60e40eae28df7e0"
+      "startCommitHash": "317bc91a39662d07dc7f51b1e60e40eae28df7e0",
+      "endCommitHash": "8e86d5bb0399c6fbfcf847f196f0b07040b1d256"
     }
   ]
 }
