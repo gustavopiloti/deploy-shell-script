@@ -2,6 +2,11 @@
   "projectName": "jq",
   "deploys": [
     {
+      "dateTime": 201812141435,
+      "startCommitHash": "a43d9011823a0510d356eb99dd5f7b5b6c140043",
+      "endCommitHash": "0fb2490af9292b50e2e227be61d8fe8cc22a0e77"
+    },
+    {
       "dateTime": 201812141434,
       "startCommitHash": "21516080914fcc713f6b9d1827c56eaa9812a8cb",
       "endCommitHash": "a43d9011823a0510d356eb99dd5f7b5b6c140043"
