@@ -66,8 +66,6 @@ then
     exit 0
 fi
 
-exit 0
-
 # Unzip package
 unzip ${PACKAGENAME}.zip -d ${PACKAGENAME}
 # Delete local package
@@ -95,15 +93,10 @@ fi
 # Copy deploy_history.json into package
 cp deploy_history.json ${PACKAGENAME}
 
-exit 0
-
 # Zip package
 zip -rj ${PACKAGENAME}.zip ${PACKAGENAME}/.
 # Remove local uncompressed package
 rm -rf ${PACKAGENAME}
-
-echo "Fim"
-exit 0
 
 # Deploy package to Google Drive
 echo "Uploading package to Google Drive"
