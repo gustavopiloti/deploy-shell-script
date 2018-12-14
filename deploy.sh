@@ -22,10 +22,10 @@ then
     STARTCOMMITHASH=$(cat deploy_history.json | jq ".deploys[0].endCommitHash")
     # Remove first and last quotes
     STARTCOMMITHASH=${STARTCOMMITHASH:1:-1}
-    ENDCOMMITHASH=$(git rev-parse HEAD)
 
     # Check if there are new commits
-    if [ ${STARTCOMMITHASH} == ${ENDCOMMITHASH} ]
+    # Use last but one commit because a commit is made at the end of the script
+    if [ ${STARTCOMMITHASH} == $(git rev-parse HEAD~1) ]
     then
         echo "There are no changes. Not deployed."
         
@@ -72,6 +72,8 @@ unzip ${PACKAGENAME}.zip -d ${PACKAGENAME}
 rm -rf ${PACKAGENAME}.zip
 echo "Package removed from local"
 
+ENDCOMMITHASH=$(git rev-parse HEAD)
+
 if [ FIRSTDEPLOY == 0 ]
 then
     NEWITEM=[{"dateTime":${DATETIME},"startCommitHash":'"'${STARTCOMMITHASH}'"',"endCommitHash":'"'${ENDCOMMITHASH}'"'}]
@@ -81,8 +83,6 @@ then
 
     echo "deploy_history.json updated"
 else
-    ENDCOMMITHASH=$(git rev-parse HEAD)
-
     JSON={"projectName":'"'${PROJECTNAME}'"',"deploys":[{"dateTime":${DATETIME},"startCommitHash":'"'${STARTCOMMITHASH}'"',"endCommitHash":'"'${ENDCOMMITHASH}'"'}]}
 
     jq -n ${JSON} > deploy_history.json
