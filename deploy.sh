@@ -105,9 +105,7 @@ fi
 cp deploy_history.json ${PACKAGENAME}
 
 # Zip package
-zip -rj ${PACKAGENAME}.zip ${PACKAGENAME}/.
-# Remove local uncompressed package
-rm -rf ${PACKAGENAME}
+zip -rm ${PACKAGENAME}.zip ${PACKAGENAME}
 
 # Deploy package to Google Drive
 echo "Uploading package to Google Drive"
