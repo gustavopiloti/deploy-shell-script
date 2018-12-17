@@ -74,16 +74,27 @@ echo "Package removed from local"
 
 ENDCOMMITHASH=$(git rev-parse HEAD)
 
-if [ FIRSTDEPLOY == 0 ]
+if [ ${FIRSTDEPLOY} == 0 ]
 then
-    NEWITEM=[{"dateTime":${DATETIME},"startCommitHash":'"'${STARTCOMMITHASH}'"',"endCommitHash":'"'${ENDCOMMITHASH}'"'}]
+    # Check deleted files
+    echo "Checking deleted files"
+    DELETEDFILES=$(git diff --name-only --diff-filter=D ${STARTCOMMITHASH} HEAD)
+
+    if [ -z "${DELETEDFILES}" ]
+    then
+        DELETEDFILESARRAY=[]
+    else
+       DELETEDFILESARRAY=$(printf '%s\n' "${DELETEDFILES[@]}" | jq -R . | jq -s .)
+    fi
+
+    NEWITEM=[{"dateTime":${DATETIME},"startCommitHash":'"'${STARTCOMMITHASH}'"',"endCommitHash":'"'${ENDCOMMITHASH}'"',"deletedFiles":${DELETEDFILESARRAY}}]
 
     JSON=$(cat deploy_history.json | jq ".")
     echo $JSON | jq ".deploys |= ${NEWITEM} + ." > deploy_history.json
 
     echo "deploy_history.json updated"
 else
-    JSON={"projectName":'"'${PROJECTNAME}'"',"deploys":[{"dateTime":${DATETIME},"startCommitHash":'"'${STARTCOMMITHASH}'"',"endCommitHash":'"'${ENDCOMMITHASH}'"'}]}
+    JSON={"projectName":'"'${PROJECTNAME}'"',"deploys":[{"dateTime":${DATETIME},"startCommitHash":'"'${STARTCOMMITHASH}'"',"endCommitHash":'"'${ENDCOMMITHASH}'"',"deletedFiles":[]}]}
 
     jq -n ${JSON} > deploy_history.json
 
