@@ -1,0 +1,11 @@
+{
+  "projectName": "jq",
+  "deploys": [
+    {
+      "dateTime": 201812171759,
+      "startCommitHash": "fe9d4596c8b4e5aca40c130ea4b28889e06b4119",
+      "endCommitHash": "d7cb4870b6ae1d68b1eaf04040bdaf6f76b5203f",
+      "deletedFiles": []
+    }
+  ]
+}
