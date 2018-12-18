@@ -8,6 +8,15 @@ then
     exit 0
 fi
 
+# Check for filenames with spaces
+echo "Checking filenames for spaces"
+if [ $(find -type f -name "* *" | wc -l) -gt 0 ]
+then
+    find -type f -name "* *" 
+    echo "Script interrupted due to filenames with space listed above"
+    exit 0
+fi
+
 DATETIME=$(date +"%Y%m%d%H%M")
 
 if [ -f "deploy_history.json" ]
