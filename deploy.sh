@@ -10,9 +10,9 @@ fi
 
 # Check for filenames with spaces
 echo "Checking filenames for spaces"
-if [ $(find -type f -name "* *" | wc -l) -gt 0 ]
+if [ $(git ls-files "* *" | wc -l) -gt 0 ]
 then
-    find -type f -name "* *" 
+    git ls-files "* *"
     echo "Script interrupted due to filenames with space listed above"
     exit 0
 fi
